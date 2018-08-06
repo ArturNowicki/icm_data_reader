@@ -1,0 +1,8 @@
+Sun Aug 5 15:27:22 CEST 2018; level = INFO; calling_program = ./icm_data_download.sh; calling_function = log_init_message; message = Current time: 2018 08 05 15:27;
+Sun Aug 5 15:27:22 CEST 2018; level = INFO; calling_program = ./icm_data_download.sh; calling_function = log_init_message; message = Latest expected update: 2018 08 05 12:00;
+Sun Aug 5 15:27:22 CEST 2018; level = INFO; calling_program = ./icm_data_download.sh; calling_function = log_init_message; message = Last update: 2017 09 18 12:00;
+Sun Aug 5 15:27:22 CEST 2018; level = INFO; calling_program = ./icm_data_download.sh; calling_function = log_init_message; message = Progress status: DOWNLOADED;
+Sun Aug 5 15:27:22 CEST 2018; level = INFO; calling_program = ./icm_data_download.sh; calling_function = extract_data; message = Extracting /Users/arturnowicki/IOPAN/code/icm_data_reader/source/../test_data/tmp_data/IOPAN1_2018080506.tbz;
+Sun Aug 5 15:27:22 CEST 2018; level = INFO; calling_program = ./icm_data_download.sh; calling_function = extract_data; message = Extracting /Users/arturnowicki/IOPAN/code/icm_data_reader/source/../test_data/tmp_data/IOPAN2_2018080506.tbz;
+Sun Aug 5 15:27:22 CEST 2018; level = INFO; calling_program = ./icm_data_download.sh; calling_function = extract_data; message = Extracting /Users/arturnowicki/IOPAN/code/icm_data_reader/source/../test_data/tmp_data/IOPAN3_2018080506.tbz;
+Sun Aug 5 15:27:29 CEST 2018; level = INFO; calling_program = ./icm_data_download.sh; calling_function = main; message = DONE;
