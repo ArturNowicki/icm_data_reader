@@ -1,3 +1,6 @@
 
 .DS_Store
 test_data
+runtime_data
+*.tmp
+

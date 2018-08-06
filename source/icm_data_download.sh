@@ -19,6 +19,9 @@ rm ${LOG_FILE} # to be removed
 
 LOGGING_LEVEL="DEBUG"
 
+USED_PARAMS=("03225" "03226" "03236" "03237" "03250" "03460" "03461" "09203" "09204" \
+"09205" "09217" "16222" "04201" "04202" "05201" "05202" "01201" "01235" "02201" "02207")
+
 ICM_HOST='ftpmeteo.icm.edu.pl'
 ICM_USER='iopan'
 ICM_PASSWD='austrul'
@@ -116,6 +119,12 @@ function get_download_list {
 	awk '/>/ {print}' ${TMP_PATH}"/list_diff1.tmp" > ${TMP_PATH}"/list_diff2.tmp"
 	cut -d " " -f 2- ${TMP_PATH}"/list_diff2.tmp" > ${TMP_PATH}"/list_diff1.tmp"
 	rm ${TMP_PATH}"/list_diff2.tmp"
+	if [[ ! -s ${TMP_PATH}"/list_diff1.tmp" ]]; then
+		rm ${TMP_PATH}"/list_diff1.tmp"
+		log_info ${FUNCNAME[0]} "No new data to download"
+		log_info ${FUNCNAME[0]} "DONE"
+		exit
+	fi
 }
 
 function download_archives {
@@ -125,7 +134,7 @@ function download_archives {
 	ctr=1
 	while read new_line; do
 		log_info ${FUNCNAME[0]} "Downloading ${new_line}"
-		err=$(echo "bla")
+		err=$(echo "HERE GOES ACTUAL DOWNLOAD ROUTINE")
 		if [ $? -ne 0 ]; then
 			log_error ${FUNCNAME[0]} "$err"
 			exit
@@ -133,6 +142,10 @@ function download_archives {
 		((ctr++))
 	# sed -i "/pattern to match/d" .../infile
 		echo ${TMP_DATA_PATH}/${new_line} >> ${ARCHIVES_LIST}
+		if [ $? -ne 0 ]; then
+			log_error ${FUNCNAME[0]} "Cannot add new line to ${ARCHIVES_LIST}"
+			exit
+		fi
 		err=$(sed -i "" "/${new_line}/d" ${TMP_PATH}/list_diff1.tmp 2>&1 >/dev/null)
 		if [ $? -ne 0 ]; then
 			log_error ${FUNCNAME[0]} "$err"
@@ -142,7 +155,7 @@ function download_archives {
 	if [ $? -ne 0 ]; then
 		log_error ${FUNCNAME[0]} "Error reading from ${TMP_PATH}/list_diff1.tmp."
 		exit
-	fi	
+	fi
 # 					while read myline
 # 					do
 # 						echo $myline
@@ -172,18 +185,18 @@ function check_datasets {
 	data_error=0
 	while read new_line; do
 		if [[ $new_line = *"IOPAN1"* ]]; then
-			pattern=${new_line(-14):8}
-			ls ${TMP_DATA_PATH}/*"IOPAN1"*${pattern}
+			pattern=${new_line:(-14):8}
+			err=$(ls ${TMP_DATA_PATH}/*"IOPAN1"*${pattern}* 2>/dev/null)
 			if [ $? -ne 0 ]; then
 				log_warning ${FUNCNAME[0]} "IOPAN1 archive missing for ${new_line}"
 				data_error=1
 			fi
-			ls ${TMP_DATA_PATH}/*"IOPAN2"*${pattern}
+			err=$(ls ${TMP_DATA_PATH}/*"IOPAN2"*${pattern}* 2>/dev/null)
 			if [ $? -ne 0 ]; then
 				log_warning ${FUNCNAME[0]} "IOPAN2 archive missing for ${new_line}"
 				data_error=1
 			fi
-			ls ${TMP_DATA_PATH}/*"IOPAN3"*${pattern}
+			err=$(ls ${TMP_DATA_PATH}/*"IOPAN3"*${pattern}* 2>/dev/null)
 			if [ $? -ne 0 ]; then
 				log_warning ${FUNCNAME[0]} "IOPAN3 archive missing for ${new_line}"
 				data_error=1
@@ -199,19 +212,25 @@ function check_datasets {
 function extract_data {
 	while read new_line; do
 		log_info ${FUNCNAME[0]} "Extracting ${new_line}"
-		tar -xjf ${new_line} -C ${ICM_DATA_PATH}/
+		tar -xjf ${new_line} -C ${TMP_DATA_PATH}/
 		if [ $? -ne 0 ]; then
 			log_error ${FUNCNAME[0]} "Error extracting data from ${new_line}"
 			exit
 		fi
 		echo ${new_line:(-21)} >> ${USED_ICM_ARCHIVES}
-		# rm ${new_line}
+		rm ${new_line}
 	done <${ARCHIVES_LIST}
-	for file_name in ${ICM_DATA_PATH}/*; do
-		ls ${file_name} >> ${ICM_FILES_QUEUE}
+	for parameter in "${USED_PARAMS[@]}"; do
+		for file_name in ${TMP_DATA_PATH}/*${parameter}*; do
+			ls ${file_name} >> ${ICM_FILES_QUEUE}
+			mv ${file_name} ${ICM_DATA_PATH}"/"
+		done
 	done
-	sort ${USED_ICM_ARCHIVES} > ${TMP_PATH}"/sorted.tmp"
+	sort -u ${USED_ICM_ARCHIVES} > ${TMP_PATH}"/sorted.tmp"
 	mv ${TMP_PATH}"/sorted.tmp" ${USED_ICM_ARCHIVES}
+	sort -u ${ICM_FILES_QUEUE} > ${TMP_PATH}"/sorted.tmp"
+	mv ${TMP_PATH}"/sorted.tmp" ${ICM_FILES_QUEUE}
+	rm ${TMP_DATA_PATH}/*"0000000"
 }
 
 function update_status {
@@ -233,17 +252,13 @@ function main {
 		get_icm_data_list
 		format_icm_list
 		get_download_list
-		update_status "LIST RETRIEVED"
-	fi
-	if [ "${progress_status}" = "LIST RETRIEVED" ] || [ "${progress_status}" = "DOWNLOADING" ]; then
-		update_status "DOWNLOADING"
 		download_archives
 		check_datasets
 		update_status "DOWNLOADED"
 	fi
 	if [ "${progress_status}" = "DOWNLOADED" ]; then
 		extract_data
-		update_status "EXTRACTED"
+		update_status "START"
 	fi
 	log_info ${FUNCNAME[0]} "DONE"
 exit
