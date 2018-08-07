@@ -2,7 +2,6 @@
 # Created by Artur Nowicki on 02.08.2018.
 
 HOME_PATH="/Users/arturnowicki/IOPAN/code/icm_data_reader"
-CONFIG_PATH=${HOME_PATH}"/config"
 APPDATA_PATH=${HOME_PATH}"/app_data"
 TMP_PATH=${HOME_PATH}"/runtime_data"
 
@@ -12,7 +11,7 @@ TMP_DATA_PATH="/Users/arturnowicki/IOPAN/code/icm_data_reader/test_data/tmp_data
 LOG_FILE=${APPDATA_PATH}"/logs.txt"
 USED_ICM_ARCHIVES=${APPDATA_PATH}"/used_icm_files.txt"
 PROGRESS_FILE=${APPDATA_PATH}"/download_progress.info"
-ICM_FILES_QUEUE=${APPDATA_PATH}"/icm_files.queue"
+ICM_FILES_QUEUE=${TMP_PATH}"/extracted_list.tmp"
 ARCHIVES_LIST=${TMP_PATH}"/archives.tmp"
 
 rm ${LOG_FILE} # to be removed
@@ -153,7 +152,7 @@ function download_archives {
 		fi
 	done <${TMP_PATH}"/list_diff1.tmp"
 	if [ $? -ne 0 ]; then
-		log_error ${FUNCNAME[0]} "Error reading from ${TMP_PATH}/list_diff1.tmp."
+		log_error ${FUNCNAME[0]} "Error reading from ${TMP_PATH}/list_diff1.tmp"
 		exit
 	fi
 # 					while read myline
